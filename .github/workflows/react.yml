@@ -1,21 +1,60 @@
-name: SonarQube Analysis
+name: SonarQube Analysis and Build
 
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
-  sonarQubeScan:
-    name: Run SonarQube Scan1
+  sonar:
+    name: SonarQube Scan and Quality Gate Check
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run SonarQube Scanner
+      - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_URL }}
+
+      - name: Wait for SonarQube Quality Gate
+        uses: sonarsource/sonar-quality-gate-action@v2
+        with:
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          sonar-host-url: ${{ secrets.SONAR_URL }}
+        id: quality_gate
+
+    outputs:
+      quality_gate_status: ${{ steps.quality_gate.outputs.status }}
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: sonar  # This makes sure the build job waits for the sonar job to complete
+
+    if: needs.sonar.outputs.quality_gate_status == 'OK'  # Conditional run based on quality gate status
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Build
+        run: |
+          # Add your build commands here
+          echo "Building the project..."
+
+      - name: Notify Quality Gate Passed
+        run: echo "Quality gate passed, proceeding with the build."
+
+  notify_failure:
+    name: Notify Quality Gate Failed
+    runs-on: ubuntu-latest
+    needs: sonar
+    if: needs.sonar.outputs.quality_gate_status != 'OK'  # Run only if the quality gate failed
+
+    steps:
+      - name: Notify
+        run: echo "Quality gate failed, build will not proceed."

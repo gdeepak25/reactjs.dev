@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  sonar:
     name: machine
     runs-on: ubuntu-latest
 

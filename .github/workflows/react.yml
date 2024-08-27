@@ -7,7 +7,7 @@ on:
 
 jobs:
   sonar:
-    name: SonarQube Scan and Quality Gate Check
+    name: SonarQube
     runs-on: ubuntu-latest
 
     steps:

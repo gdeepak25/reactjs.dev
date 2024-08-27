@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: SonarQube
+    name: machine
     runs-on: ubuntu-latest
 
     steps:
